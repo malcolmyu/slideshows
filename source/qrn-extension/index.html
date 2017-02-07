@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Qunar React Native Extension</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+    </script>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1>Qunar React Native Extension</h1>
+          <address>
+            <p>于明昊</p>
+            <p>
+              <a href="http://weibo.com/sombiesombie" title="@sombiesombie" class="icon-weibo"></a>
+              <a href="https://twitter.com/minghaoyu" title="@minghaoyu" class="icon-twitter"></a>
+              <a href="http://github.com/malcolmyu" title="@malcolmyu" class="icon-github-circled"></a>
+            </p>
+          </address>
+        </section>
+
+        <!-- 现阶段遇到的问题 -->
+        <section>
+          <section>
+            <h2>现阶段遇到的问题</h2>
+          </section>
+
+          <section>
+            <h3>Navigator</h3>
+            <figure>
+              <p><img src="img/understand-navigator.png" class="transparent"></p>
+              <figcaption>全论坛点击量<strong>第二</strong>的贴子</figcaption>
+              <p class="fragment">点击<strong>第一</strong>是如何写 ES6 😂</p>
+            </figure>
+          </section>
+
+          <section>
+            <h3>页面跳转</h3>
+            <p class="fragment"><img src="img/rn-hy.png" class="transparent"></p>
+            <figcaption class="fragment">客户端大了，什么样的技术都有（<strong>RN / Native / HY</strong>）</figcaption>
+          </section>
+
+          <section>
+            <h3>数据流管理</h3>
+            <ul>
+              <li class="fragment">父组件如何跟子组件通信？<code class="fragment">props</code></li>
+              <li class="fragment">子组件如何跟父组件通信？<small class="fragment">callback</small></li>
+              <li class="fragment">小叔子组件如何跟二大爷组件通信？<small class="fragment">我选择屎亡</small></li>
+            </ul>
+            <h4 class="fragment separated">组件间存在严重<strong>「代沟」</strong></h4>
+          </section>
+        </section>
+
+        <!-- Ext.Router -->
+        <section>
+          <section data-markdown>
+            ## Ext - Router
+          </section>
+
+          <section>
+            <h3>原生 Navigator</h3>
+            <p class="fragment"><img src="img/simple-navigator.png" class="transparent"></p>
+            <p class="fragment">↑ <ruby>简<rp>(</rp><rt>hē</rt><rp>)</rp>单<rp>(</rp><rt>hē</rt><rp>)</rp></ruby>的例子</p>
+          </section>
+
+          <section data-markdown>
+            ### Ext - Router
+
+            ```js
+            _onPress() {
+              Ext.open('pageA', {
+                param: { id: 1 }
+              });
+            }
+            ```
+
+            ↑ 真正简单的例子
+          </section>
+
+          <section>
+            <h3>页面跳转 API</h3>
+            <ul>
+              <li class="fragment"><code>open(name[, opts])</code><small>打开一个新的页面（新建历史）</small></li>
+              <li class="fragment"><code>back([opts])</code><small>回到上一个页面</small></li>
+              <li class="fragment"><code>backTo(name[, opts])</code><small>回到指定页面</small></li>
+              <li class="fragment"><code>goto(name[, opts])</code><small>前往指定页面（历史中有则回退）</small></li>
+              <li class="fragment"><code>home([opts])</code><small>回到首页</small></li>
+              <li class="fragment"><code>close(name)</code><small>关闭指定页面</small></li>
+            </ul>
+          </section>
+
+          <section data-markdown>
+            ### 页面 **激活/失活** 回调
+
+            ```js
+            class Base extends QView {
+              // Events
+              bindEvents = {
+                actived(param) {
+                  console.log('[Base][actived]', param);
+                },
+                deactived() {
+                  console.log('[Base][deactived]');
+                }
+              };
+            };
+            ```
+          </section>
+
+          <section>
+            <h3>导航栏 NavigatorBar</h3>
+            <p><img src="img/bar.png" class="transparent"></p>
+            <p class="fragment">拥有丰富的转场动画</p>
+            <p class="fragment">可以<em>按页面</em>定制</p>
+          </section>
+
+          <section data-markdown>
+            ### **全局**制定
+
+            ```js
+            // 配置全局导航栏
+            Ext.defaults.navBar = {
+              // 是否显示，默认为 false，不显示
+              isShow: true,
+              // 导航栏高度
+              height: 80,
+              // 左侧按钮文字，默认 '返回'
+              leftButtonText: 'back',
+              // ...
+            };
+            ```
+          </section>
+
+          <section data-markdown>
+            ### **页面**制定
+
+            ```js
+            class base extends QView {
+              // 配置页面导航栏
+              static routerPlugin = {
+                // 是否显示导航栏
+                isShow: true,
+                // 标题，默认空字符串
+                title: 'Base',
+                // 左侧按钮文字，默认 '返回'
+                leftButtonText: 'back',
+                // ...
+              };
+            }
+            ```
+
+            `xxxPlugin` 是在页面级别进行 Ext 插件配置的标准写法
+          </section>
+
+          <section data-markdown>
+            ### RN / Native / HY 跳转
+
+            ```js
+            Ext.Router.Bridge.sendScheme({
+              url: 'qunariphone://react/debug',
+            });
+            ```
+          </section>
+        </section>
+
+        <!-- 数据流管理 -->
+        <section>
+          <section>
+            <h2>数据流管理</h2>
+          </section>
+
+          <section>
+            <h3>如何解决组件<strong>「代沟」</strong>？</h3>
+            <p class="fragment">发布订阅模式 Pub/Sub <small>publish and subscribe</small></p>
+          </section>
+
+          <section>
+            <h3>Facebook 的解决方案：<strong>Flux</strong></h3>
+            <p class="fragment"><img src="img/flux.png" class="transparent"></p>
+          </section>
+
+          <section>
+            <h3>问题？</h3>
+            <ul>
+              <li class="fragment"><code>store</code> 尺寸根本控制不住</li>
+              <li class="fragment"><strong>异步</strong>处理太恶心</li>
+              <li class="fragment">各种<strong>反模式</strong><small>如 reflux 就需要使用 <code>mixin</code></small></li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- Flux -->
+        <section>
+          <section>
+            <h3 class="fragment"><strong>Redux</strong></h3>
+            <p class="fragment">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <g fill="#764ABC" transform="scale(0.5, 0.5) translate(50, 0)">
+                  <path d="M65.6 65.4c2.9-.3 5.1-2.8 5-5.8-.1-3-2.6-5.4-5.6-5.4h-.2c-3.1.1-5.5 2.7-5.4 5.8.1 1.5.7 2.8 1.6 3.7-3.4 6.7-8.6 11.6-16.4 15.7-5.3 2.8-10.8 3.8-16.3 3.1-4.5-.6-8-2.6-10.2-5.9-3.2-4.9-3.5-10.2-.8-15.5 1.9-3.8 4.9-6.6 6.8-8-.4-1.3-1-3.5-1.3-5.1-14.5 10.5-13 24.7-8.6 31.4 3.3 5 10 8.1 17.4 8.1 2 0 4-.2 6-.7 12.8-2.5 22.5-10.1 28-21.4z"/>
+                  <path d="M83.2 53c-7.6-8.9-18.8-13.8-31.6-13.8H50c-.9-1.8-2.8-3-4.9-3h-.2c-3.1.1-5.5 2.7-5.4 5.8.1 3 2.6 5.4 5.6 5.4h.2c2.2-.1 4.1-1.5 4.9-3.4H52c7.6 0 14.8 2.2 21.3 6.5 5 3.3 8.6 7.6 10.6 12.8 1.7 4.2 1.6 8.3-.2 11.8-2.8 5.3-7.5 8.2-13.7 8.2-4 0-7.8-1.2-9.8-2.1-1.1 1-3.1 2.6-4.5 3.6 4.3 2 8.7 3.1 12.9 3.1 9.6 0 16.7-5.3 19.4-10.6 2.9-5.8 2.7-15.8-4.8-24.3z"/>
+                  <path d="M32.4 67.1c.1 3 2.6 5.4 5.6 5.4h.2c3.1-.1 5.5-2.7 5.4-5.8-.1-3-2.6-5.4-5.6-5.4h-.2c-.2 0-.5 0-.7.1-4.1-6.8-5.8-14.2-5.2-22.2.4-6 2.4-11.2 5.9-15.5 2.9-3.7 8.5-5.5 12.3-5.6 10.6-.2 15.1 13 15.4 18.3 1.3.3 3.5 1 5 1.5-1.2-16.2-11.2-24.6-20.8-24.6-9 0-17.3 6.5-20.6 16.1-4.6 12.8-1.6 25.1 4 34.8-.5.7-.8 1.8-.7 2.9z"/>
+                </g>
+              </svg>
+            </p>
+          </section>
+
+          <section>
+            <h3>三大原则</h3>
+            <ul>
+              <li class="fragment">单一数据源</li>
+              <li class="fragment"><code>state</code> 是<em>只读</em>的</li>
+              <li class="fragment">使用<strong>纯函数</strong>来执行修改</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>简单对象 <code>action</code></h3>
+            <p class="fragment">描述事情的发生，例如：</p>
+            <ul>
+              <li class="fragment">江南皮革厂倒闭啦</li>
+              <li class="fragment">带着小姨子跑路啦</li>
+              <li class="fragment">统统二十块！</li>
+            </ul>
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            cosnt goingBankrupt = () => ({ type: 'GO_BANKRUPT' });
+            const runAwayWithSomeone = (someone) => ({
+              type: 'RUN_AWAY_WITH_SOMEONE',
+              payload: someone,
+            });
+            const cutPrice = (price) => ({
+              type: 'CUT_PRICE',
+              payload: price,
+            });
+            ```
+          </section>
+
+          <section>
+            <h3>可控的 <code>reducer</code></h3>
+            <ul>
+              <li class="fragment">执行修改的纯函数</li>
+              <li class="fragment"><code>action</code> 的调度器</li>
+              <li class="fragment">可以<strong>自由拆分组合</strong></li>
+            </ul>
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            const initialState = {
+              status: 'normal',
+            };
+            const leatherFactory = (state = initialState, action) => {
+              switch (action.type) {
+                case 'GO_BANKRUPT':
+                  return { status: 'bankrupt' };
+                // ...other case  
+                default:
+                  return state;
+              }
+            };
+            ```
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            const initialState = {
+              status: 'in factory',
+              partner: 'wife',
+            };
+            const boss = (state = initialState, action) => {
+              switch (action.type) {
+                case 'RUN_AWAY_WITH_SOMEONE':
+                  return { status: 'run away', partner: 'sister in law' };
+                // ...other case  
+                default:
+                  return state;
+              }
+            }
+            ```
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            import { combineReducers } from 'redux';
+
+            export default combineReducers({
+              leatherFactory,
+              wangbadan: boss,
+              wallet,
+            });
+            ```
+          </section>
+
+          <section>
+            <img src="http://7xinjg.com1.z0.glb.clouddn.com/combined-redux.png">
+            <figcaption><em>树状</em>结构的 reducer</figcaption>
+          </section>
+
+          <section>
+            <h3>异步处理？<small>跑路之前，要先等小姨子化一个小时的妆（误</small></h3>
+            <p class="fragment">使用<strong>中间件（Middleware）</strong>进行自由扩展</p>
+            <ul>
+              <li class="fragment">redux-thunk</li>
+              <li class="fragment">redux-promise</li>
+              <li class="fragment">...</li>
+            </ul>
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            const runAwayWithSomeone = someone => dispatch => {
+              if (someone.haveToMakeUp) {
+                someone.makeup.then(() => dispatch({
+                  type: 'RUN_AWAY_WITH_SOMEONE',
+                  payload: someone,
+                }));
+              }
+              // ...
+            };
+            ```
+          </section>
+
+          <section data-markdown>
+            #### < / >
+
+            ```js
+            import { applyMiddleware, createStore } from 'redux';
+            import reduxThunk from 'redux-thunk';
+
+            // 中间件多了以后就需要 compose 了
+            const finalCreateStore = applyMiddleware(reduxThunk)(createStore);
+            const store = finalCreateStore(combinedReducer);
+            ```
+
+            **函数式**编程，门槛较高
+          </section>
+
+          <section>
+            <h3>更好的接入 react</h3>
+            <p class="fragment fade-out">react-redux</p>
+            <p class="fragment fade-up"><strong>Ext - Redux</strong></p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Ext - Redux</h2>
+          </section>
+
+          <section data-markdown>
+            ### 全局配置
+
+            ```js
+            Ext.defaults.redux = {
+              // 配置 createStore 的三个参数 reducer/initialState/enhancer
+              reducer,
+              initialState,
+              enhancer
+              // 配置 middleware 中间件
+              middleware: []
+            };
+            ```
+
+            去除各种复杂配置
+          </section>
+
+          <section data-markdown>
+            ### 页面/组件级配置
+
+            ```js
+            class Page extends QComponet {
+              static reduxPlugin = {
+                mapStateToProps: (state) => ({
+                    shopList: state.shopList
+                    category: state.shopInfo.category
+                }),
+
+                mapDispatchToProps: { changeFoodCount }
+              };
+            }
+            ```
+
+             插件通用配置方式，功效跟 `@connect` 一样
+          </section>
+
+          <section data-markdown>
+            ### 提供数据隔离措施
+            
+            ```js
+            Ext.open('MyPage:new');
+            // 即可使用一个新 store 副本打开一个数据隔离的页面
+            ```
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    <script src="//malcolmyu.github.io/reveal.js/lib/js/head.min.js"></script>
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
