@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
 
-    <title>Qunar React Native Extension</title>
+    <title>Redux 从入门到放弃</title>
 
     <meta name="description" content="An Introduction about Qunar React Native Extension.">
     <meta name="author" content="Yu Minghao">
@@ -336,7 +336,8 @@
             ### redux-thunk 中间件
 
             ```js
-            store.dispatch((dispatch) => {
+            store.dispatch((dispatch, getState) => {
+              const state = getState();
               // 进行一些异步操作
               setTimeout(() => {
                 dispatch({ type: 'HELLO_WORLD_ACTION' });
