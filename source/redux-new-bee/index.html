@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>事件系统与 Redux</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+    </script>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1>事件系统与 Redux</h1>
+          <address>
+            <p>于明昊</p>
+            <p>
+              <a href="http://weibo.com/sombiesombie" title="@sombiesombie" class="icon-weibo"></a>
+              <a href="https://twitter.com/minghaoyu" title="@minghaoyu" class="icon-twitter"></a>
+              <a href="http://github.com/malcolmyu" title="@malcolmyu" class="icon-github-circled"></a>
+            </p>
+          </address>
+        </section>
+
+        <!-- 为什么需要事件系统 -->
+        <section>
+          <section>
+            <h2>为什么需要事件系统？</h2>
+            <h3 class="fragment">设想一个场景：点击 A 模块的按钮，触发 B 模块的重新加载</h3>
+          </section>
+
+          <section data-markdown>
+            ### A 模块可以这么写
+
+            ```js
+            import B from 'B';
+
+            A.onClick = () => {
+              B.reload();
+            };
+            ```
+          </section>
+
+          <section data-markdown>
+            ### B 模块就只能这么写……
+
+            ```js
+            import A from 'A';
+
+            A.clickCallback = () => {
+              B.reload();
+            };
+            ```
+
+            A 如果不提供接口，基本无法实现
+          </section>
+
+          <section>
+            <h2>耦合！</h2>
+            <h3 class="fragment">A 离不开 B，B 离不开 A，<del>缠缠绵绵到天涯</del></h3>
+            <h3 class="fragment">如何把它们 <em>分开</em> 呢？</h3>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>发布/订阅模式</h2>
+            <h3 class="fragment">典型场景：<em>发朋友圈、发微信</em></h3>
+          </section>
+
+          <section>
+            <img src="img/wx.jpg" class="transparent" style="width: 500px"/>
+          </section>
+
+          <section>
+            <img src="img/wx-response.jpg" class="transparent" style="width: 400px"/>
+          </section>
+
+          <section data-markdown>
+            ### EventBus 的实现
+
+            ```js
+            // file A - 卖桌子
+            import eventBus from 'EventBus';
+
+            eventBus.emit('sellTable', A);
+
+            // file B - 买桌子
+            import eventBus from 'EventBus';
+
+            eventBus.on('sellTable', (person) => {
+              if (person.isMale()) {
+                // 对半砍
+              } else {
+                // 买买买！
+              }
+            });
+            ```
+          </section>
+
+          <section>
+            <h2>思考题</h2>
+            <h3 class="fragment">发<strong>朋友圈</strong>跟<strong>发群</strong>有啥区别？</h3>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment">胖友圈：谁关注谁接收</li>
+              <li class="fragment">大群：不关注也得接收</li>
+            </ul>
+            <h3 class="fragment">flux 模式跟传统 EventBus 的第一个区别</h3>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>Facebook 的解决方案：<strong>Flux</strong></h3>
+            <p class="fragment"><img src="img/flux.png" class="transparent"></p>
+          </section>
+
+          <section data-markdown>
+            ### flux 的实现
+
+            ```js
+            // file A - 卖桌子
+            import flux from 'flux';
+
+            flux.dispach({
+              type: 'SELL_TABLE',
+              person: A,
+            });
+
+            // file B - 买桌子
+            class B extends Component {
+              componentDidMount() {
+                storeB.addBuyListener(this._onChange);
+              }
+
+              _onChange() {
+                this.setState({
+                  // 进行显示的变化
+                })
+              }
+            }
+            ```
+          </section>
+
+          <section data-markdown>
+            ### dispatcher
+
+            ```js
+            dispatcher.register(action => {
+              switch(action.type) {
+                case 'SELL_TABLE':
+                  storeB.emitBuy();
+                  return;
+              }
+            });
+            ```
+          </section>
+        </section>
+
+        <!-- 理解使用方式 -->
+        <section>
+          <section>
+            <h2>Redux 的解决方案</h2>
+          </section>
+
+          <section>
+            <h3>React 的解决方案：<strong>Redux</strong></h3>
+            <p class="fragment"><img src="img/redux.jpg" style="height: 400px" class="transparent"></p>
+          </section>
+
+          <section>
+            <h1><strong>Action</strong></h1>
+          </section>
+
+          <section data-markdown>
+            ### 举个栗子
+
+            ```js
+            {
+              type: 'HELLO_WORLD_ACTION',
+              payload: {
+                hello: 'world',
+              }
+            }
+            ```
+          </section>
+
+          <section>
+            <h3><code>type</code> 就是 action 的类型</h3>
+            <ul>
+              <li class="fragment">这是一个<strong>必填项</strong>！</li>
+              <li class="fragment">并且是 action 的 <em>唯一标识</em></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>NO PROBLEM?</h3>
+            <h2 class="fragment">等等…… <code>payload</code> 是个啥？</h2>
+          </section>
+
+          <section>
+            <h2>payload <code>[ˈpeɪləʊd]</code></h2>
+            <p>n. 有效载荷；（航天器、卫星的）装备；</p>
+            <p><strong>（车辆等的）装载货物；</strong>（炸弹、导弹的）爆炸力；</p>
+          </section>
+
+          <section>
+            <h3><code>payload</code> 就是 action 装载的货物</h3>
+            <ul>
+              <li class="fragment">虽然没有规定，但默认都放这儿</li>
+              <li class="fragment">某些 <strong>中间件</strong> 对该字段有要求</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 class="fragment">action 用来表述 <em>用户行为</em></h3>
+            <ul>
+              <li class="fragment"><code>type</code> 表示用户进行了什么操作</li>
+              <li class="fragment"><code>payload</code> 表示用户怎样进行的操作</li>
+              <li class="fragment">最终被传递给 <code>dispatch</code></li>
+            </ul>
+          </section>
+
+          <section>
+            <h1><strong>ActionCreator</strong></h1>
+          </section>
+
+          <section>
+            <h3 class="fragment">创造 <code>action</code> 的函数</h3>
+            <ul>
+              <li class="fragment">一般是 <em>纯函数</em></li>
+              <li class="fragment">输入可以多种多样，输出必须符合 <code>action</code> 的格式</li>
+              <li class="fragment">尽可能的在这里处理 <strong>与显示无关的逻辑</strong></li>
+            </ul>
+          </section>
+
+          <section>
+            <h1><strong>Dispatch</strong></h1>
+          </section>
+
+          <section>
+            <h2>dispatch <code>[dɪˈspætʃ]</code></h2>
+            <p>vt. <strong>派遣，调度</strong>；（迅速地）发出；</p>
+            <p>迅速处理，迅速了结；处决（罪犯等）；</p>
+          </section>
+
+          <section data-markdown>
+            ### 举个栗子
+
+            ```js
+            store.dispatch({
+              type: 'HELLO_WORLD_ACTION',
+              payload: {
+                hello: 'world',
+              },
+            });
+            ```
+          </section>
+
+          <section>
+            <h3 class="fragment">顾名思义 <code>dispatch</code> 是一个调度行为</h3>
+            <ul>
+              <li class="fragment">把代表 <em>用户行为</em> 的 <code>action</code> 传递给代表 <em>数据调度</em> 的 <code>reducer</code> </li>
+              <li class="fragment"><strong>中间件</strong> 其实是对 dispatch 的处理</li>
+              <li class="fragment">一般接受的是 <code>ActionCreator</code> 的结果</li>
+            </ul>
+          </section>
+
+          <section>
+            <h1><strong>Reducer</strong></h1>
+          </section>
+
+          <section>
+            <h2>reducer <code>[rɪ'dju:sə]</code></h2>
+            <p>n.	减速器；缩减者，减压器，还原剂；</p>
+            <p class="fragment">↑ 没有一个意思能表示 reducer 是干啥的</p>
+          </section>
+
+          <section data-markdown>
+            ### js 中的 reduce
+
+            ```js
+            [1, 2, 3, 4, 5].reduce((p, n) => p + n, 0);
+            // 15
+            ```
+          </section>
+
+          <section data-markdown>
+            ### redux 中的 reducer
+
+            ```js
+            const demoReducer = (state = initialState, action) => {
+              switch (action.type) {
+                case 'HELLO_WORLD_ACTION':
+                  return action.payload;
+                case 'ANOTHER_ACTION':
+                  return {
+                    hello: 'another',
+                    ...state,
+                  };
+                // ...
+              }
+            }
+            ```
+          </section>
+
+          <section>
+            <h3>让两者灵魂相通的方式是 <code>combineReducer</code></h3>
+            <p class="fragment"><img src="img/combined-redux.png" class="transparent"></p>
+          </section>
+
+          <section>
+            <h3 class="fragment">reducer 表示可 <em>被缩减</em> 的状态 <strong>调度器</strong></h3>
+            <ul>
+              <li class="fragment">多个 reducer 可以通过 <code>combineReducer</code> 来进行缩减</li>
+              <li class="fragment">层级加深，但 reducer 内部无需关注</li>
+              <li class="fragment">最终汇集成一个大的 <code>store</code></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>flux 与 redux 的区别</h3>
+          </section>
+
+          <section>
+            <p class="fragment"><img src="img/flux-t.png" class="transparent"></p>
+          </section>
+
+          <section>
+            <p class="fragment"><img src="img/redux-t.png" class="transparent"></p>
+          </section>
+        </section>
+        <section>
+
+          <section>
+            <h1><strong>Middleware</strong></h1>
+          </section>
+
+          <section>
+            <h3 class="fragment">中间件</h3>
+            <ul>
+              <li class="fragment">传统语义下指的就是 <strong>弥合底层差异，提供顶层滋瓷</strong> 的软件</li>
+              <li class="fragment">TJ 搞了 Express 之后，中间件变成了 <strong>框架的扩展手段</strong></li>
+            </ul>
+          </section>
+  
+          <section>
+            <h3>Redux 的中间件</h3>
+            <p class="fragment">官方文档是这样说的：</p>
+            <quote class="fragment">『Redux 中间件与 Express 和 Koa 的中间件解决的问题并不相同，但二者在概念上却高度一致。从一个 <code>action</code> 被 <code>dispatch</code>，到这个 <code>action</code> 到达 <code>reducer</code>，中间件在这两个时刻中间提供了一个第三方扩展的<em>植入点</em>。』</quote>
+          </section>
+
+          <section data-markdown>
+            ### redux-thunk 中间件
+
+            ```js
+            store.dispatch((dispatch, getState) => {
+              const state = getState();
+              // 进行一些异步操作
+              setTimeout(() => {
+                dispatch({ type: 'HELLO_WORLD_ACTION' });
+              }, 0);
+            })
+            ```
+          </section>
+
+          <section data-markdown>
+            ### redux-promise 中间件
+
+            ```js
+            store.dispatch({
+              type: 'HELLO_WORLD_ACTION',
+              // 给 payload 传递一个 promise，reducer 中会拿到
+              // 请求后的数据
+              payload: fetch('/api/123'),
+            })
+            ```
+
+            #### **注意**：这里必须让 `payload` 是 promise
+          </section>
+
+          <section>
+            <h3>中间件核心思想 —— <em>thunk</em></h3>
+            <h4>包装原生 <code>dispatch</code>，在中间件内部选择时机进行 <code>dispatch</code>。</h4>
+            <h4 class="fragment">flux 模式跟传统 EventBus 的第二个区别</h4>
+          </section>
+
+          <section>
+            <h1><strong>State</strong></h1>
+          </section>
+
+          <section>
+            <h3><code>state</code> 是统一数据集合</h3>
+            <ul>
+              <li class="fragment">这份数据就是 <strong>combineReducer</strong> 之后生成的大对象</li>
+              <li class="fragment">可通过 <code>mapStateToProps</code> 分发到各个组件，辅助更新</li>
+            </ul>
+          </section>
+
+          <section>
+            <h1><strong>Store</strong></h1>
+          </section>
+
+          <section>
+            <h3><code>store</code> 是一个提供 state 存储和各种 api 的实例</h3>
+            <ul>
+              <li class="fragment"><code>dispatch</code></li>
+              <li class="fragment"><code>getState</code></li>
+              <li class="fragment"><code>subscribe</code></li>
+            </ul>
+            <h4 class="fragment">redux 希望维护一个 <em>单一 store</em></h4>
+          </section>
+
+          <section>
+            <h3>再来看看这个图</h3>
+            <p class="fragment"><img src="img/redux.jpg" class="transparent"></p>
+          </section>
+        </section>
+
+        <!-- Flux -->
+        <section>
+          <section>
+            <h2>更好的接入 react</h2>
+          </section>
+
+          <section data-markdown>
+            #### 原生接入方式
+
+            ```js
+            import { applyMiddleware, createStore } from 'redux';
+            import reduxThunk from 'redux-thunk';
+
+            // 中间件多了以后就需要 compose 了
+            const finalCreateStore = applyMiddleware(reduxThunk)(createStore);
+            const store = finalCreateStore(combinedReducer);
+
+            &#60;Provider store={store}>&#60;App />&#60;/Provider>
+
+            @connect()
+            class Demo extends Component {
+              // ...
+            }
+            ```
+
+            **函数式**编程，门槛较高
+          </section>
+
+          <section>
+            <h3>更好的接入 react</h3>
+            <p class="fragment fade-out">react-redux</p>
+            <p class="fragment fade-up"><strong>RNPlus - Redux</strong></p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>RNPlus - Redux</h2>
+          </section>
+
+          <section data-markdown>
+            ### 全局配置
+
+            ```js
+            RNPlus.defaults.redux = {
+              // 配置 createStore 的三个参数 reducer/initialState/enhancer
+              reducer,
+              initialState,
+              enhancer
+              // 配置 middleware 中间件
+              middleware: []
+            };
+            ```
+
+            去除各种复杂配置
+          </section>
+
+          <section data-markdown>
+            ### 页面/组件级配置
+
+            ```js
+            class Page extends QComponet {
+              static reduxPlugin = {
+                mapStateToProps: (state) => ({
+                  shopList: state.shopList
+                  category: state.shopInfo.category
+                }),
+                // 或
+                mapStateToProps: [
+                  'shopList',
+                  'shopInfo.category',
+                }),
+
+                mapDispatchToProps: {
+                  // 这个是你的 ActionCreator
+                  changeFoodCount,
+                }
+              };
+            }
+            ```
+
+            #### 插件通用配置方式，功效跟 `@connect` 一样
+          </section>
+
+          <section data-markdown>
+            ### 提供数据隔离措施
+            
+            ```js
+            RNPlus.open('MyPage:new');
+            // 即可使用一个新 store 副本打开一个数据隔离的页面
+            ```
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    <script src="//malcolmyu.github.io/reveal.js/lib/js/head.min.js"></script>
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
