@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Git 由深入浅</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+    </script>
+
+    <style>
+      .reveal h1 { font-size: 4em; font-weight: bold; }
+      .reveal h2 { font-size: 4em; font-weight: bold; }
+      .reveal h3 { font-size: 4em; font-weight: bold; }
+      .reveal h4 { font-size: 4em; font-weight: bold; }
+      .reveal p  { font-size: 4em; font-weight: bold; }
+      .reveal li { font-size: 4em; font-weight: bold; }
+      .reveal a  { font-size: 4em; font-weight: bold; }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <p>Git 由<em>深</em>入<em>浅</em></p>
+        </section>
+
+        <!-- 系列讲座 -->
+        <section>
+          <section>
+            <ul>
+              <li class="fragment"><strong>本周</strong> Git与Mobx</li>
+              <li class="fragment"><strong>下周</strong> 各种组件</li>
+            </ul>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment"><del>知其所以然</del></li>
+              <li class="fragment">更好的解 bug</li>
+            </ul>
+          </section>
+        </section>
+
+
+        <section>
+          <p>分支越多项目就越大吗？</p>
+        </section>
+
+        <!-- 内容寻址的文件系统 -->
+
+        <section>
+          <section>
+            <p>Git 的本质就在 .git 中</p>
+          </section>
+
+          <section>
+            <p>Git 的本质是<strong>内容寻址</strong>的文件系统</p>
+          </section>
+
+          <section>
+            <p>怎么<strong>签名</strong>？</p>
+            <p class="fragment">SHA-1</p>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment">hash-object</li>
+              <li class="fragment">cat-file</li>
+            </ul>
+          </section>
+
+          <section>
+            <p>commit</p>
+            <p>tree</p>
+            <p>blob</p>
+          </section>
+
+          <section>
+            <p>现在你就知道了什么是<em>提交</em></p>
+          </section>
+        </section>
+
+        <!-- 分支是什么 -->
+
+        <section>
+          <section>
+            <p>分支越多项目就越大吗？</p>
+          </section>
+
+          <section>
+            <p>想想 SVN 的分支怎么创建？</p>
+          </section>
+
+          <section>
+            <p>分支的本质是一个 41 字节的<strong>文件</strong></p>
+          </section>
+
+          <section>
+            <p>现在你就知道了什么是<em>分支</em></p>
+          </section>
+
+          <section>
+            <p>merge 的本质是什么？</p>
+          </section>
+
+          <section>
+            <p>merge 的本质需要两句话才能说明白</p>
+          </section>
+
+          <section>
+            <ul>
+              <li class="fragment">fast-forward</li>
+              <li class="fragment">three-way</li>
+            </ul>
+          </section>
+
+          <section>
+            <img src="https://git-scm.com/book/en/v2/images/basic-branching-4.png">
+          </section>
+
+          <section>
+            <img src="https://git-scm.com/book/en/v2/images/basic-merging-2.png">
+          </section>
+
+          <section>
+            <p>听说有个<strong>变基</strong>？</p>
+          </section>
+
+          <section>
+            <p>请求各位大佬<strong>不要</strong>变基</p>
+          </section>
+
+          <section>
+            <p>tag 的本质跟分支一样</p>
+          </section>
+
+          <section>
+            <p>btag: beta tag</p>
+            <p>rtag: release tag</p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <p><strong><ruby>高<rp>(</rp><rt>chū</rt><rp>)</rp>层<rp>(</rp><rt>jí</rt><rp>)</rp></ruby></strong>操作</p>
+          </section>
+
+          <section>
+            <img src="https://git-scm.com/book/en/v2/images/areas.png">
+          </section>
+
+          <section>
+            <p>git status</p>
+          </section>
+
+          <section>
+            <p>git add</p>
+            <p>git checkout</p>
+          </section>
+
+          <section>
+            <p>git commit</p>
+            <p>git reset</p>
+          </section>
+
+          <section>
+            <p>git pull</p>
+            <p>git push</p>
+          </section>
+
+          <section>
+            <p>git branch</p>
+            <p>git merge</p>
+            <p>git diff</p>
+          </section>
+
+          <section>
+            <p>git stash</p>
+            <p>git cherry-pick</p>
+          </section>
+
+          <section>
+            <p>git show</p>
+            <p>git log</p>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <p>听人讲一万遍课，不如自己看一眼书</p>
+          </section>
+
+          <section>
+            <a href="https://git-scm.com/book/zh/v2/">点我看书</a>
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    <script src="//malcolmyu.github.io/reveal.js/lib/js/head.min.js"></script>
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
