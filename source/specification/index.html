@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>项目规范</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+    </script>
+
+    <style>
+      .reveal h1 { font-size: 4em; font-weight: bold; }
+      .reveal h2 { font-size: 4em; font-weight: bold; }
+      .reveal h3 { font-size: 4em; font-weight: bold; }
+      .reveal h4 { font-size: 4em; font-weight: bold; }
+      .reveal p  { font-size: 4em; font-weight: bold; }
+      .reveal li { font-size: 4em; font-weight: bold; }
+      .reveal a  { font-size: 4em; font-weight: bold; }
+      .reveal pre  { font-size: 4em; font-weight: bold; width: 100%; margin: 0; padding: 0;}
+      .reveal code { font-size: 0.3em; font-weight: bold; max-height: 100%; }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <p><strong>编码规范</strong></p>
+          <p>与</p>
+          <p><strong>项目基础</strong></p>
+        </section>
+
+        <section>
+          <p>不说不对</p>
+          <p>一说就会</p>
+        </section>
+
+        <!-- 编码规范 -->
+        <section>
+          <section>
+            <p><strong>命名</strong></p>
+          </section>
+
+          <section>
+            <p>我以前有个同学……</p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            function fuck(fuck1) {
+            var fuck2=null;fuck1.some(function(fuck3){if(!fuck3%2)return fuck2=fuck3,true});
+            }
+            ```
+          </section>
+
+          <section>
+            <p>怎么命名才算<em>合格</em>？</p>
+          </section>
+
+          <section>
+            <p>要让 review 的人知道你的意图</p>
+          </section>
+
+          <section>
+            <p><em>不要</em>用下划线命名</p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            function Parent() {
+              this._private = 'private variable';
+            }
+            ```
+          </section>
+
+          <section>
+            <p>普通变量、实例<em>小驼峰</em></p>
+            <p>camelCase</p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            const dataSource = [];
+            const editStore = new EditStore();
+            ```
+          </section>
+
+          <section>
+            <p>类名<em>大驼峰</em></p>
+            <p>PascalCase</p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            class EditView {}
+
+            // es5
+            function Modal() {}
+            ```
+          </section>
+
+          <section>
+            <p>常量<strong>大写下划线</strong></p>
+            <p>MAX_COUNT</p>
+          </section>
+
+          <section>
+            <p>缩写<em>全大写</em></p>
+            <p>URL/ID</p>
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <p><strong>形式规范</strong></p>
+          </section>
+
+          <section>
+            <img src="img/shake.jpg" height="600px" />
+          </section>
+
+          <section>
+            <p>感谢 ESLint</p>
+          </section>
+        </section>  
+
+        <section>
+          <section>
+            <p><strong>写代码</strong></p>
+          </section>
+
+          <section data-markdown>
+            `if (!~arr.indexOf(5))`
+          </section>
+
+          <section data-markdown>
+            ```js
+            arr.some((a, i) => {
+              if (a === '4')
+                return n = i, ture;
+            });
+            ```
+          </section>
+
+          <section>
+            <p>业务代码<em>不要炫技</em></p>
+          </section>
+
+          <section data-markdown>
+            `if (arr.indexOf(5) > -1)`
+          </section>
+
+          <section data-markdown>
+            ```js
+            arr.some((a, i) => {
+              if (a === '4') {
+                n = i;
+                return ture;
+              }
+            });
+            ```
+          </section>
+
+          <section>
+            <p>连续 if 用 <em>switch</em></p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            if (scan.status === 'CONFIRM') {
+              content = this.renderStayConfrim();
+            } else if (scan.status === 'COMFIRM_TIMEOUT') {
+              content = this.renderConfirmTimeout();
+            } else if (scan.status === 'SHOW' || scan.status === 'SHOW_TIMEOUT') {
+              content = this.renderQrcode();
+            }
+            ```
+          </section>
+
+          <section data-markdown>
+            ```js
+            switch (scan.status) {
+              case 'CONFIRM':
+                content = this.renderStayConfrim();
+                break;
+              case 'COMFIRM_TIMEOUT':
+                content = this.renderConfirmTimeout();
+                break;
+              case 'SHOW':
+              case 'SHOW_TIMEOUT':
+                content = this.renderQrcode();
+                break;
+            }
+            ```
+          </section>
+
+          <section>
+            <p>但是要注意 Full Through</p>
+          </section>
+
+          <section>
+            <p>讲不明白的地方<strong>加注释</strong></p>
+          </section>
+
+          <section>
+            <p>TODO/XXX</p>
+            <p>FIXME</p>
+          </section>
+
+          <section>
+            <p>NO MAGIC NUMBER</p>
+          </section>
+
+          <section data-markdown>
+            ```js
+            if (status === 3) {}
+            ```
+          </section>
+
+          <section>
+            <img src="img/miaomiaomiao.jpg" />
+          </section>
+            
+          <section>
+            <img src="img/comments.jpg" />
+          </section>
+
+          <section>
+            <p>尽量减少重复计算/求值</p>
+          </section>
+
+          <section data-markdown>
+            ```jsx
+            &lt;Tabel
+              columns={this.getColumns()}
+            />
+            ```
+          </section>
+
+          <section data-markdown>
+            ```jsx
+            &lt;Tabel
+              columns={columns}
+            />
+            ```
+          </section>
+
+          <section>
+            <p>原型方法注意不要用到全局变量</p>
+          </section>
+
+          <section data-markdown>
+            ```jsx
+            let isEditing = false;
+
+            class Table extends Component {
+              onClick() {
+                isEditing = true;
+              }
+
+              onCancel() {
+                isEditing = false;
+              }
+            }
+            ```
+          </section>
+
+        </section>
+
+        <section>
+          <section>
+            <p>项目结构介绍</p>
+          </section>
+
+          <section>
+            <p>dotfile</p>
+            <p>config</p>
+          </section>
+
+          <section>
+            <p>.npmrc</p>
+          </section>
+          <section>
+            <small>
+              <ul>
+                <li>项目配置 xx/.npmrc</li>
+                <li>用户配置 ~/.npmrc</li>
+                <li>全局配置 /etc/npmrc</li>
+              </ul>
+            </small>
+          </section>
+          <section>
+            <p>注释 <strong>; #</strong></p>
+          </section>
+          <section>
+            <p>写法 <strong>key=value</strong></p>
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    <script src="//malcolmyu.github.io/reveal.js/lib/js/head.min.js"></script>
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
