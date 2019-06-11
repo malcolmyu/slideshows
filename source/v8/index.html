@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>MobX 原理与源码解析</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+    <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.slim.min.js"></script>
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if (window.location.search.match(/print-pdf/gi)) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+
+      $(document).ready(() => {
+        $('li').addClass('fragment');
+      });
+    </script>
+
+    <style>
+      .reveal strong  { font-weight: bold; }
+      .reveal em  { font-weight: bold; }
+      .reveal h1 { font-size: 4em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal h2 { font-size: 4em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal h3 { font-size: 4em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal h4 { font-size: 2.5em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal p  { font-size: 3em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal h5 { font-size: 2.5em; font-weight: normal; color: rgba(255, 255, 255, 0.5); font-family: 'Fira Code' }
+      .reveal li { font-size: 2.5em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal a  { font-size: 2.5em; font-weight: bold; font-family: 'Fira Code' }
+      .reveal pre  { font-size: 1em; font-family: 'Fira Code'}
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1>V8 垃圾回收</h1>
+        </section>
+
+        <!-- WHAT AND WHY -->
+        <section>
+          <section>
+            <h1><em>WHAT</em></h1>
+            <h5>还用讲？</h5>
+          </section>
+
+          <section data-markdown>
+            #### 早期语言没 GC 的
+
+            ```c
+            int* ptr;
+            ptr = (int*) malloc(100 * sizeof(int));
+            free(ptr);
+            ```
+          </section>
+
+          <section>
+            <h1><em>WHY</em></h1>
+            <h5>你为啥要收拾家？</h5>
+          </section>
+
+          <section>
+            <ul>
+              <li>内存空间是<em>有限的</em>，而且非常珍贵</li>
+              <li>代码写的屎</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- HOW -->
+        <section>
+          <section>
+            <h1><em>HOW</em></h1>
+            <h5>你怎么收拾家？</h5>
+          </section>
+
+          <section>
+            <p><strong>Stop-The-World</strong></p>
+          </section>
+
+          <section>
+            <ul>
+              <li>熊孩子乱跑？</li>
+              <li>产生<strong>新垃圾</strong></li>
+              <li>拿走<strong>旧垃圾</strong></li>
+            </ul>
+          </section>
+
+          <section>
+            <img src="img/xhz.jpg" width="550" />
+          </section>
+
+          <section>
+            <h1><em>弱分代假设</em></h1>
+            <h5>死的快死，活的永生</h5>
+          </section>
+
+          <section>
+            <ul>
+              <li>生活垃圾、快递盒子</li>
+              <li>有些东西<strong>隔几天</strong>会扔一次</li>
+            </ul>
+          </section>
+
+          <section>
+            <ul>
+              <li>文件、手机盒、前女（男）友的信</li>
+              <li>有些东西<strong>大扫除（搬家）</strong>才会扔掉</li>
+            </ul>
+          </section>
+
+          <section>
+            <ul>
+              <li>有些东西<strong>不会扔</strong></li>
+            </ul>
+          </section>
+
+          <section>
+            <img src="img/hypothesis.jpg" width="950" />
+          </section>
+        </section>
+
+        <!-- 概念 Concepts -->
+        <section>
+          <section>
+            <h1>一些概念</h1>
+          </section>
+
+          <section>
+            <p>内存中的对象</p>
+            <ul>
+              <li>头 header</li>
+              <li>域 field</li>
+              <li>域又分<em>指针</em>和<em>非指针</em></li>
+            </ul>
+          </section>
+
+          <section>
+            <h1>根对象</h1>
+            <h5>Root</h5>
+          </section>
+
+          <section>
+            <ul>
+              <li>当前作用域</li>
+              <li>全局对象</li>
+              <li>浏览器对象</li>
+            </ul>
+          </section>
+
+          <section>
+            <p>传统算法</p>
+            <ul>
+              <li>Mark-Sweeping</li>
+              <li>Mark-Compact</li>
+            </ul>
+          </section>
+
+          <section>
+            <figure>
+              <img src="img/sweeping.png" width="550" />
+              <figcaption>Mark Sweeping</figcaption>
+            </figure>
+          </section>
+
+          <section>
+            <figure>
+              <img src="img/compact.png" width="500" />
+              <figcaption>Mark Compact</figcaption>
+            </figure>
+          </section>
+
+          <section>
+            <h1>写屏障</h1>
+            <h5>Write Barrier</h5>
+          </section>
+
+          <section>
+            ```js
+            // Called after `object.field = value`.
+            write_barrier(object, field_offset, value) {
+              // do something...
+            }
+            ```
+          </section>
+        </section>
+
+        <!-- 分代 -->
+        <section>
+          <section>
+            <p>空间分类</p>
+            <img src="img/type.jpg" width="950" />
+          </section>
+
+          <section>
+            <img src="img/memory.jpg" width="550" />
+          </section>
+
+          <section>
+            <h4><strong>New Generation</strong></h4>
+            <h5>Scavenge 算法</h5>
+          </section>
+
+          <section>
+            <h4><strong>Old Generation</strong></h4>
+            <h5>Mark-Sweep/Mark-Compact</h5>
+          </section>
+        </section>
+
+        <!-- 清道夫算法 -->
+        <section>
+          <section>
+            <h1>Scavenge</h1>
+            <h5>Cheney于1970年发表</h5>
+          </section>
+
+          <section>
+            <ul>
+              <li>marking 标记</li>
+              <li>evacuating 疏散</li>
+              <li>pointer-updating 晋升</li>
+            </ul>
+          </section>
+
+          <section>
+            <img src="img/scavenge-1.svg" width="850" />
+          </section>
+
+          <section>
+            <img src="img/scavenge-2.svg" width="850" />
+          </section>
+
+          <section>
+            <p>具体处理过程详解</p>
+          </section>
+
+          <section>
+            <img src="img/cheney-1.png" width="850" />
+          </section>
+
+          <section>
+            <img src="img/cheney-2.png" width="850" />
+          </section>
+
+          <section>
+            <img src="img/cheney-3.png" width="850" />
+          </section>
+
+          <section>
+            <img src="img/cheney-4.png" width="850" />
+          </section>
+          
+          <section>
+            <p>效率？</p>
+            <ul>
+              <li>存活对象很少</li>
+              <li>To Space 按时间排序</li>
+              <li>基本在 1ms 以下</li>
+            </ul>
+          </section>
+
+          <section>
+            <p>如果有来自 Old Space 的引用？</p>
+            <h5>使用写屏障记录</h5>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h1>Orinoco</h1>
+            <img src="img/v8-orinoco.svg" width="200" />
+          </section>
+
+          <section>
+            <p>主要优化老生代</p>
+            <ul>
+              <li><em>增量</em>标记</li>
+              <li><em>惰性/并发/并行</em>清除</li>
+            </ul>
+          </section>
+
+          <section>
+              <p>增量标记产生遗漏</p>
+            <img src="img/tri-color-pr.jpg" width="700" />
+          </section>
+
+          <section>
+            <h1><strong>三色标记</strong>算法</h1>
+            <h5>Tri-Color Marking</h5>
+          </section>
+
+          <section>
+            <img src="img/tr-color.gif" width="700" />
+          </section>
+
+          <section>
+            <p>依然存在遗漏？</p>
+            <h5>所有写入对象直接标灰</h5>
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    <script src="//malcolmyu.github.io/reveal.js/lib/js/head.min.js"></script>
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.min.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
