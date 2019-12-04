@@ -69,7 +69,7 @@
           </section>
           <section>
             <blockquote>RxJS 是使用 Observables 的<strong>响应式编程</strong>的库，它使编写异步或基于回调的代码更容易。</blockquote>
-            <blockquote>ReactiveX 结合了<strong>观察者模式</strong>、<strong>迭代器模式</strong> 和 <strong>使用集合的函数式编程</strong>，以满足以一种理想方式来管理事件序列所需要的一切。</blockquote>
+            <blockquote class="fragment">ReactiveX 结合了<strong>观察者模式</strong>、<strong>迭代器模式</strong> 和 <strong>使用集合的函数式编程</strong>，以满足以一种理想方式来管理事件序列所需要的一切。</blockquote>
           </section>
           <section>
             <img src="img/phone.jpeg" style="height: 400px" class="transparent">
@@ -103,10 +103,11 @@
               <li class="fragment">使用请求队列，确保请求顺序</li>
             </ol>
           </section>
-          <section>
+          <section data-transition="none">
             <h3>『那你实现一下代码吧！』</h3>
+            <p class="fragment">↓</p>
             <pre class="typescript fragment">
-              <code class="hljs" data-trim>
+              <code class="hljs" data-trim data-line-numbers>
                 onTabChange = debounce(this.tabChange, 300);
 
                 tabChange = (curTab) => {
@@ -521,8 +522,8 @@
           <section>
             <h2>介绍了几种操作符</h2>
             <ul>
-              <li class="fragment"><em>创建类</em> from/interval 等</li>
-              <li class="fragment"><em>过滤类</em> 背压控制/take/skip 等</li>
+              <li class="fragment"><em>创建类</em> <code>from/interval</code> 等</li>
+              <li class="fragment"><em>过滤类</em> 背压控制/<code>take/skip</code> 等</li>
               <li class="fragment"><em>转换类</em> 无损回压/打平等</li>
             </ul>
           </section>
@@ -530,10 +531,13 @@
             <h2>常见问题</h2>
             <ol>
               <li>延迟调用，记得 <code>subscribe</code></li>
+              <li>产生高阶 <code>Observable</code> 记得打平</li>
               <li>异常即使捕获也会导致流的中断</li>
-              <li>产生高阶 Observable 记得打平</li>
-              <li>在有重试机制下使用 <code>defer</code> 创建</li>
             </ol>
+          </section>
+          <!-- 异常处理看个例子 -->
+          <section>
+            <iframe src="https://stackblitz.com/edit/ho-error?embed=1&file=index.ts" frameborder="0" width="1100" height="600"></iframe>
           </section>
           <section>
             <h2>参考资料与工具推荐</h2>
