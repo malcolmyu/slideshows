@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>RxJS 在小程序中的应用</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/black.css" id="theme">
+    <link rel="stylesheet" href="/assets/css/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/ayu.css">
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if( window.location.search.match( /print-pdf/gi ) ) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+    </script>
+    <style>
+      /* .reveal h1 { font-size: 4em; font-weight: bold; }
+      .reveal h2 { font-size: 3.5em; font-weight: bold; }
+      .reveal h3 { font-size: 3em; font-weight: bold; }
+      .reveal h4 { font-size: 2.5em; font-weight: bold; }
+      .reveal p  { font-size: 2em; font-weight: bold; }
+      .reveal li { font-size: 2em; font-weight: bold; }
+      .reveal a  { font-size: 2em; font-weight: bold; }
+      .reveal pre  { font-size: 1em; font-weight: bold; } */
+      @font-face {
+        font-family: 'Fira Code';
+        src: url(/assets/fonts/FiraCode-Regular.ttf);
+      }
+      .reveal code {
+        font-family: 'Fira Code';
+        line-height: 150%;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1><strong>RxJS</strong> 在小程序中的应用</h1>
+          <address>
+            <p>于明昊</p>
+          </address>
+        </section>
+
+        <!-- 开始，简单的介绍一下一些概念 -->
+        <section>
+          <section>
+            <h1>什么是 <strong>RxJS</strong></h1>
+          </section>
+          <section>
+            <blockquote>RxJS 是使用 Observables 的<strong>响应式编程</strong>的库，它使编写异步或基于回调的代码更容易。</blockquote>
+            <blockquote>ReactiveX 结合了<strong>观察者模式</strong>、<strong>迭代器模式</strong> 和 <strong>使用集合的函数式编程</strong>，以满足以一种理想方式来管理事件序列所需要的一切。</blockquote>
+          </section>
+          <section>
+            <img src="img/phone.jpeg" style="height: 400px" class="transparent">
+            <p>写的什么玩意？</p>
+          </section>
+        </section>
+
+        <!-- 直接引入一个例子 -->
+        <section>
+          <section>
+            <h2>有一位哲人曾经说过…</h2>
+            <ul>
+              <li class="fragment">我们遇到什么困难也不要怕，微笑着面对它</li>
+              <li class="fragment">消除恐惧的最好办法就是面对恐惧</li>
+              <li class="fragment"><del>加油！奥利给！</del></li>
+              <li class="fragment">让我们直接<em>看个例子</em></li>
+            </ul>
+          </section>
+
+          <!-- 引入切换 tab 的例子 -->
+          <section>
+            <h3><strong>面试题</strong> Tab 快速切换时如何保证数据准确性?</h3>
+            <p class="fragment"><img src="img/switchTab.png" style="height: 400px" class="transparent"></p>
+            <p class="fragment">↑ 展示内容与当前 Tab 不对应</p>
+          </section>
+          <section>
+            <h3>『具体都有什么解决方式？』</h3>
+            <ol>
+              <li class="fragment">使用 <code>debounce</code> 之类的工具消抖</li>
+              <li class="fragment">响应的时候进行校验</li>
+              <li class="fragment">使用请求队列，确保请求顺序</li>
+            </ol>
+          </section>
+          <section>
+            <h3>『那你实现一下代码吧！』</h3>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim>
+                onTabChange = debounce(this.tabChange, 300);
+
+                tabChange = (curTab) => {
+                  this.curTab = curTab;
+                  
+                  fetch(`/api/${curTab}`).then((data) => {
+                    if (this.curTab === data.tabId) {
+                      render();
+                    }
+                  });
+                }
+              </code>
+            </pre>
+          </section>
+          <section data-transition="none">
+            <h3>代码中有哪些不协调感？</h3>
+            <p class="fragment">↓ 异步与回调混用</p>
+            <pre class="typescript">
+              <code class="hljs" data-trim data-line-numbers="1,3,6">
+                onTabChange = debounce(this.tabChange, 300);
+
+                tabChange = (curTab) => {
+                  this.curTab = curTab;
+                  
+                  fetch(`/api/${curTab}`).then((data) => {
+                    if (this.curTab === data.tabId) {
+                      render();
+                    }
+                  });
+                }
+              </code>
+            </pre>
+          </section>
+          <section data-transition="none">
+            <h3>代码中有哪些不协调感？</h3>
+            <p class="fragment">↓ 随时可能变化的全局变量</p>
+            <pre class="typescript">
+              <code class="hljs" data-trim data-line-numbers="4">
+                onTabChange = debounce(this.tabChange, 300);
+
+                tabChange = (curTab) => {
+                  this.curTab = curTab;
+                  
+                  fetch(`/api/${curTab}`).then((data) => {
+                    if (this.curTab === data.tabId) {
+                      render();
+                    }
+                  });
+                }
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>为什么不试试神奇的 RxJS 呢？</h3>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim>
+                const tabSwitch$ = fromEvent(tab, 'click');
+
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <iframe src="https://stackblitz.com/edit/tabswitcher?embed=1&file=index.ts" frameborder="0" width="1100" height="600"></iframe>
+          </section>
+        </section>
+
+        <!-- 简单解释一下 rxjs -->
+        <section>
+          <section>
+            <h2>RxJS 解决什么问题</h2>
+            <h3 class="fragment">异步编程（响应式编程）的范式统一</h3>  
+            <ul>
+              <li class="fragment">输入 → 所有行为转换为流</li>
+              <li class="fragment">输出 → 统一使用副作用</li>
+              <li class="fragment">流转 → 操作符优雅的时序控制</li>
+            </ul>
+          </section>
+          <section>
+            <h3>什么是流 stream ？</h3>
+            <video class="fragment" src="img/stream.mov" autoplay loop controls></video>
+            <p class="fragment">↑ 流就是随着时间推移不断填充数据的序列</p>
+          </section>
+          <section>
+            <h3>什么是副作用？</h3>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim>
+                // 无副作用
+                function sum(a, b) {
+                  return a + b;
+                }
+                // 副作用
+                function sum(x) {
+                  return x + this.y;
+                }
+              </code>
+            </pre>
+            <p class="fragment">↑ 无副作用的函数针对特定输出总能得到特定结果</p>
+          </section>
+          <section>
+            <h3>什么是操作符？</h3>
+            <ol>
+              <li class="fragment">对流进行时间维度上的操作</li>
+              <li class="fragment">分为：创建、过滤、辅助、合并、转换、异常</li>
+            </ol>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim data-line-numbers="1,4,5,8">
+                const tabSwitch$ = fromEvent(tab, 'click');
+
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>延迟执行</h3>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim data-line-numbers="7">
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>整体观感</h3>
+            <img src="img/stream.png" style="height: 400px" class="transparent">
+          </section>
+        </section>
+
+        <!-- 操作符详细介绍 -->
+        <section>
+          <!-- 创建类 -->
+          <section>
+            <h2>创建类操作符</h2>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim data-line-numbers="1">
+                const tabSwitch$ = fromEvent(tab, 'click');
+
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>看个 DEMO</h3>
+            <iframe src="https://stackblitz.com/edit/rx-op-creator?embed=1&file=index.ts" frameborder="0" width="1100" height="600" class="fragment"></iframe>
+          </section>
+          <!-- 操作符详解 -->
+          <section>
+            <iframe width="1100" height="600" frameborder="0" src="https://www.mindmeister.com/maps/public_map_shell/1379537986/rxjs?width=600&height=400&z=auto" scrolling="no" style="overflow: hidden; margin-bottom: 5px;"></iframe>
+          </section>
+
+          <!-- 过滤类 -->
+          <section>
+            <h2>过滤类操作符</h2>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim data-line-numbers="4">
+                const tabSwitch$ = fromEvent(tab, 'click');
+
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>过滤类操作符分类</h3>
+            <ol>
+              <li class="fragment">
+                值过滤
+                <ul>
+                  <li class="fragment">耳熟能详 <code>filter</code></li>
+                  <li class="fragment">有头有尾 <code>first/last</code></li>
+                  <li class="fragment"><strong><code>take/skip</code> 家族</strong></li>
+                </ul>
+              </li>
+              <li class="fragment">
+                回压控制
+                <ul>
+                  <li class="fragment"><strong>节流消抖 <code>throttle/debounce/audit</code></strong></li>
+                  <li class="fragment">采样控制 <code>simple</code></li>
+                </ul>
+              </li>
+            </ol>
+          </section>
+          <section>
+            <h3><strong>take</strong> 截前 n 个流</h3>
+            <video src="img/take.mov" autoplay loop controls></video>
+          </section>
+          <section>
+            <h3><strong>takeWhile</strong> 条件判断截流</h3>
+            <video src="img/takewhile.mov" autoplay loop controls></video>
+          </section>
+          <section>
+            <h3><strong>takeWhile</strong> 根据流截流</h3>
+            <video src="img/takeuntil.mov" autoplay loop controls></video>
+          </section>
+          <section>
+            <h2>Back Pressure <code>[bækˈpreʃə(r)]</code></h2>
+            <p class="fragment fade-out">n. 背压</p>
+            <p class="fragment">n. 向后的压力</p>
+          </section>
+          <section>
+            <h3><strong>throttle</strong> 节流函数</h3>
+            <p>以窗口为周期，必定执行</p>
+            <video src="img/throttle.mov" autoplay loop controls></video>
+          </section>
+          <section>
+            <h3><strong>debounce</strong> 消抖函数</h3>
+            <p>用户停止操作后执行</p>
+            <video src="img/debounce.mov" autoplay loop controls></video>
+          </section>
+          <!-- 转化类 -->
+          <section>
+            <h2>转化类操作符</h2>
+            <pre class="typescript fragment">
+              <code class="hljs" data-trim data-line-numbers="5">
+                const tabSwitch$ = fromEvent(tab, 'click');
+
+                tabSwitch$.pipe(
+                  debounceTime(300),
+                  switchMap((curTab) =>
+                    from(fetch(`/api/${curTab}`))
+                  ),
+                  tap(render),
+                ).subscribe();
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h1>学不动了，等下再讲</h1>
+          </section>
+
+          <!-- 操作符详解 -->
+          <section>
+            <iframe width="1100" height="600" frameborder="0" src="https://www.mindmeister.com/maps/public_map_shell/1379537986/rxjs?width=600&height=400&z=auto" scrolling="no" style="overflow: hidden; margin-bottom: 5px;"></iframe>
+          </section>
+        </section>
+
+        <!-- 质量上报 -->
+        <section>
+          <section>
+            <h2>直播质量上报</h2>
+            <ol>
+              <li class="fragment">需要每 10s 上报一次切片</li>
+              <li class="fragment">当直播结束或用户离开时上报一次汇总并停止</li>
+            </ol>
+          </section>
+          <section>
+            <pre class="typescript">
+              <code class="hljs" data-trim>
+                // 回调获取状态
+                onLiveStateChange(state) {
+                  this.stateList.push(state);
+                }
+                // 10s 切片
+                onLivePlay() {
+                  this.interval = setInterval(() => {
+                    const slice = this.stateList.slice(this.cursor, length);
+                    this.reportSlice(slice);
+                  }, 10000)
+                }
+                // 回调上报汇总
+                onLiveEndOrUserLeave() {
+                  this.reportTotal(this.stateList);
+                  clearInterval(this.interval);
+                }
+              </code>
+            </pre>
+          </section>
+          <section>
+            <h3>问题在哪里？</h3>
+            <ul>
+              <li class="fragment">冗杂的异步代码</li>
+              <li class="fragment">有一个全局数组</li>
+            </ul>
+          </section>
+          <section data-transition="none">
+            <h3>轮到 RxJS 出场了</h3>
+            <pre class="typescript">
+              <code class="hljs" data-trim data-line-numbers>
+                mounted() {
+                  const end$ = merge(liveEnd$, userLeave$);
+                  
+                  stateChange$.pipe(
+                    takeUntil(end$),
+                    bufferTime(10000),
+                    tap(this.reportSlice),
+                    reduce((acc, v) => acc.concat(v)),
+                    tap(this.reportTotal),
+                  ).subscribe();
+                }
+              </code>
+            </pre>
+          </section>
+          <section data-transition="none">
+            <h3>轮到 RxJS 出场了</h3>
+            <pre class="typescript">
+              <code class="hljs" data-trim data-line-numbers="6">
+                mounted() {
+                  const end$ = merge(liveEnd$, userLeave$);
+                  
+                  stateChange$.pipe(
+                    takeUntil(end$),
+                    bufferTime(10000),
+                    tap(this.reportSlice),
+                    reduce((acc, v) => acc.concat(v)),
+                    tap(this.reportTotal),
+                  ).subscribe();
+                }
+              </code>
+            </pre>
+          </section>
+
+          <section>
+            <h3>转化类操作符</h3>
+            <ol>
+              <li class="fragment">
+                值映射
+                <ul>
+                  <li class="fragment">耳熟能详 <code>map/mapTo</code></li>
+                  <li class="fragment">方便快捷 <code>pluck</code></li>
+                </ul>
+              </li>
+              <li class="fragment">
+                无损回压控制
+                <ul>
+                  <li class="fragment">产生高阶 <code>window</code></li>
+                  <li class="fragment"><strong>产生数组 <code>buffer</code></strong></li>
+                </ul>
+              </li>
+              <li class="fragment">
+                高阶打平四兄弟
+                <ul>
+                  <li class="fragment"><strong>我全都要 <code>mergeMap/concatMap</code></strong></li>
+                  <li class="fragment"><strong>适当丢弃 <code>switchMap/exhaustMap</code></strong></li>
+                </ul>
+              </li>
+            </ol>
+          </section>
+
+          <section>
+            <h3>buffer 直接看个🌰</h3>
+            <iframe src="https://stackblitz.com/edit/liveslice-fpbb8q?embed=1&file=index.ts" frameborder="0" width="1100" height="600"></iframe>
+          </section>
+
+          <section>
+            <h3>高阶 Observable</h3>
+            <p class="fragment">↓ 产生 Observable 的 Observable 叫高阶 Observable</p>
+            <video src="img/high.mov" autoplay loop controls></video>
+          </section>
+
+          <section>
+            <h3>无损打平 <code>concatMap</code></h3>
+            <img src="img/concatmap.png" alt="concatmap">
+          </section>
+          <section>
+            <h3>无损打平 <code>mergeMap</code></h3>
+            <img src="img/mergemap.png" alt="concatmap">
+          </section>
+
+          <section>
+            <h3>有损打平 <code>switchMap</code></h3>
+            <img src="img/switchmap.png" alt="concatmap">
+          </section>
+          <section>
+            <h3>有损打平 <code>exhaustMap</code></h3>
+            <img src="img/switchmap.png" alt="concatmap">
+            <p class="fragment">↑ 你没看错，官网就没图</p>
+          </section>
+
+          <!-- 操作符详解 -->
+          <section>
+            <iframe width="1100" height="600" frameborder="0" src="https://www.mindmeister.com/maps/public_map_shell/1379537986/rxjs?width=600&height=400&z=auto" scrolling="no" style="overflow: hidden; margin-bottom: 5px;"></iframe>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>回顾一下</h2>
+            <ul>
+              <li class="fragment"><em>为啥</em> 范式优雅统一</li>
+              <li class="fragment"><em>是啥</em> 创建流和控制流的工具合集</li>
+              <li class="fragment"><em>咋用</em> 各种 operators</li>
+            </ul>
+          </section>
+          <section>
+            <h2>介绍了几种操作符</h2>
+            <ul>
+              <li class="fragment"><em>创建类</em> from/interval 等</li>
+              <li class="fragment"><em>过滤类</em> 背压控制/take/skip 等</li>
+              <li class="fragment"><em>转换类</em> 无损回压/打平等</li>
+            </ul>
+          </section>
+          <section>
+            <h2>常见问题</h2>
+            <ol>
+              <li>延迟调用，记得 <code>subscribe</code></li>
+              <li>异常即使捕获也会导致流的中断</li>
+              <li>产生高阶 Observable 记得打平</li>
+              <li>在有重试机制下使用 <code>defer</code> 创建</li>
+            </ol>
+          </section>
+          <section>
+            <h2>参考资料与工具推荐</h2>
+            <ul>
+              <li><a href="https://stackblitz.com/">Stackblitz</a> 在线 IDE，巨好用</li>
+              <li><a href="https://rxviz.com/">rxviz</a> 可视化 Rx</li>
+              <li><a href="https://rxmarbles.com/">弹珠图</a> 可视化，但不能动</li>
+              <li><a href="https://book.douban.com/subject/30217949/">深入浅出 RxJS</a> 比较全面</li>
+              <li><a href="https://cn.rx.js.org/">中文官网</a> 官网底部有一个实用小工具</li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
