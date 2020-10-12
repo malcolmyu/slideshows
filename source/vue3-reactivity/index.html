@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>V8</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+    <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.slim.min.js"></script>
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if (window.location.search.match(/print-pdf/gi)) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+
+      $(document).ready(() => {
+        $('li').addClass('fragment');
+      });
+    </script>
+
+    <style>
+      * { text-align: left; }
+
+      h1,h2,h3,h4,h5,p {
+        text-align: center;
+      }
+
+      @font-face {
+        font-family: 'Fira Code';
+        src: url(/assets/fonts/FiraCode-Regular.ttf);
+      }
+      .reveal code {
+        font-family: 'Fira Code';
+        line-height: 150%;
+        background-color: #191f26;
+      }
+      .reveal pre code {
+        padding: 15px;
+      }
+      .reveal pre {
+        padding: 0;
+        margin: 0;
+        background: transparent;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1>Vue3.0 <strong>Reactivity</strong></h1>
+          <address>
+            <p>于明昊</p>
+          </address>
+        </section>
+
+        <!-- Vue 中的 Reactive -->
+        <section>
+          <section>
+            <h1>Vue 2.0 存在 Reactive 吗</h1>
+          </section>
+
+          <section>
+            <img src="img/vue2.png" width="550" />
+          </section>
+
+          <section>
+            <h1>Vue2 中的 Reactive 大致有<em>哪些场景</em>？</h1>
+          </section>
+
+          <section>
+            <ul>
+              <li>DOM 自动渲染</li>
+              <li>Watch 方法自动执行</li>
+              <li>Computed 值自动计算</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>大概是什么样子？</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers>
+                export default {
+                  data: { name: 'Malcolm' },
+
+                  computed: {
+                    text() { return 'Hello ' + this.name }
+                  },
+
+                  watch: {
+                    'name': function() { console.log('name changed') }
+                  },
+
+                  render(h) { h('div', this.text) }
+                }
+              </code>
+            </pre>
+          </section>
+
+          <section>
+            <h1>有什么<em>共通点</em>吗？</h1>
+            <h5>通过<strong>值的变化</strong>来<strong>自执行</strong>函数？</h5>
+          </section>
+
+          <section>
+            <h3>存在两个抽象</h1>
+            <ul>
+              <li>值，或者叫<strong>可观测值</strong>：<strong>reactive</strong></li>
+              <li>自执行函数：<strong>effect</strong></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>存在两个问题</h1>
+            <ul>
+              <li>值变化<strong>怎么触发</strong>自执行？</li>
+              <li>值变化<strong>触发哪些</strong>函数自执行？</li>
+              <li>怎么触发 → set: <strong>trigger</strong></li>
+              <li>触发哪些 → get: <strong>track</strong></li>
+            </ul>
+          </section>
+
+          <section>
+            <h3>track 和 trigger 是一个函数体</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers="4-6,12">
+                export default {
+                  data: { name: 'Malcolm' },
+
+                  computed: {
+                    text() { return 'Hello ' + this.name }
+                  },
+
+                  watch: {
+                    'name': function() { console.log('name changed') }
+                  },
+
+                  render(h) { h('div', this.text) }
+                }
+              </code>
+            </pre>
+          </section>
+
+          <section>
+            <h3>track 和 trigger 是不同函数体</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers="8-10">
+                export default {
+                  data: { name: 'Malcolm' },
+
+                  computed: {
+                    text() { return 'Hello ' + this.name }
+                  },
+
+                  watch: {
+                    'name': function() { console.log('name changed') }
+                  },
+
+                  render(h) { h('div', this.text) }
+                }
+              </code>
+            </pre>
+          </section>
+
+          <section>
+            <h3>依赖收集的函数，不是触发执行的函数</h1>
+            <h5>区分 track 和 callback：<strong>onSchedule</strong></h5>
+          </section>
+
+          <section>
+            <p><img src="img/relations.png" width="650" /></p>
+          </section>
+        </section>
+
+        <!-- Reactive -->
+        <section>
+          <section>
+            <h1>进入正题：Vue3 的 <strong>Reactivity</strong></h1>
+          </section>
+
+          <section>
+            <p><a href="https://github.com/vuejs/vue-next/tree/master/packages/reactivity/src" target="_blank">
+              <img src="img/pkg.png" width="350" />
+            </a></p>
+          </section>
+
+          <section>
+            <p>四个核心模块</p>
+            <ul>
+              <li>ref</li>
+              <li>reactive</li>
+              <li>computed</li>
+              <li>effect</li>
+            </ul>
+          </section>
+
+          <section>
+            <p><img src="img/overview.png" width="650" /></p>
+          </section>
+        </section>
+
+        <!-- Effect -->
+        <section>
+          <section>
+            <h1><strong>Effect</strong></h1>
+          </section>
+
+          <section>
+            <h3>依赖收集与触发</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers>
+              const obj = { foo: 1 }
+              effect(() => {
+                console.log(obj.foo)
+                track(obj, TrackOpTypes.GET, 'foo')
+              })
+
+              obj.foo = 2
+              trigger(obj, TriggerOpTypes.SET, 'foo')
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>全局 tracking 控制</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers>
+              let shouldTrack = true
+              const trackStack: boolean[] = []
+              
+              export function pauseTracking() {
+                trackStack.push(shouldTrack)
+                shouldTrack = false
+              }
+              
+              export function enableTracking() {
+                trackStack.push(shouldTrack)
+                shouldTrack = true
+              }
+              
+              export function resetTracking() {
+                const last = trackStack.pop()
+                shouldTrack = last === undefined ? true : last
+              }
+            </code></pre>
+          </section>
+
+          <section>
+            <h3>Effect Option</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers>
+              export interface ReactiveEffectOptions {
+                lazy?: boolean
+                scheduler?: (job: ReactiveEffect) => void
+                onTrack?: (event: DebuggerEvent) => void
+                onTrigger?: (event: DebuggerEvent) => void
+                onStop?: () => void
+              }
+            </code></pre>
+            <p class="fragment">↑ 重点说一下 onSchedule</p>
+          </section>
+
+          <section>
+            <h3>watchEffect 和 effect 有啥区别？</h3>
+            <pre class="typescript"><code class="hljs" data-trim data-line-numbers="5-6">
+              const obj = reactive({ a: 1 });
+
+              new Vue({
+                setup() {
+                  effect(() => console.log(obj.a));
+                  watchEffect(() => console.log(obj.a));
+                }
+              });
+            </code></pre>
+          </section>
+        </section>
+
+        <!-- Reactive -->
+        <section>
+          <section>
+            <h1><strong>Reactive</strong></h1>
+          </section>
+
+          <section>
+            <h3>四个核心模块</h3>
+            <ul>
+              <li>reactive</li>
+              <li>readonly</li>
+              <li>shadow</li>
+              <li>raw</li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h3>参考</h3>
+            <ul>
+              <li>[深入理解 Vue3 Reactivity API](https://zhuanlan.zhihu.com/p/146097763)</li>
+            </ul>
+          </section>
+        </section>
+
+        <section>
+          <h2>Q&amp;A</h2>
+          <p><small>- EOF -</small></p>
+        </section>
+      </div> 
+    </div>
+
+    
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
