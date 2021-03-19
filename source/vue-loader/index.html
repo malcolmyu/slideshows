@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="zh-CN">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>vue-loader 解析</title>
+
+    <meta name="description" content="An Introduction about Qunar React Native Extension.">
+    <meta name="author" content="Yu Minghao">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/reveal.css">
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/css/theme/just.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="//malcolmyu.github.io/reveal.js/lib/css/zenburn.css">
+    <script src="https://cdn.staticfile.org/jquery/3.4.1/jquery.slim.min.js"></script>
+
+    <!-- If the query includes "print-pdf", include the PDF print sheet -->
+    <script>
+      if (window.location.search.match(/print-pdf/gi)) {
+        var link = document.createElement( "link" );
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = "//malcolmyu.github.io/reveal.js/css/print/pdf.css";
+        document.getElementsByTagName( "head" )[0].appendChild( link );
+      }
+
+      $(document).ready(() => {
+        $('li').addClass('fragment');
+      });
+    </script>
+
+    <style>
+      * {
+        text-align: left;
+        font-family: 'Menlo';
+      }
+
+      h1,h2,h3,h4,h5,p {
+        text-align: center;
+      }
+
+      @font-face {
+        font-family: 'Fira Code';
+        src: url(/assets/fonts/FiraCode-Regular.ttf);
+      }
+      .reveal code {
+        font-family: 'Fira Code';
+        line-height: 150%;
+        background-color: #191f26;
+      }
+      .reveal pre code {
+        padding: 15px;
+      }
+      .reveal pre {
+        padding: 0;
+        margin: 0;
+        background: transparent;
+      }
+      .c {
+        color:#A3DDCB;
+      }
+      .cyan {
+        background-color:#A3DDCB;
+      }
+      .yellow {
+        background-color:#e6b566;
+      }
+      .green {
+        background-color: #e8e9a1;
+      }
+
+      pre {
+        max-height: 600px;
+        overflow-y: scroll;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- start -->
+        <section>
+          <h1><strong>Vue-Loader</strong> 源码解析</h1>
+          <h5>uniapp 是基于 vue-loader 深度改造的一个产物</h5>
+        </section>
+
+        <!-- webpack loader/pitch -->
+        <section>
+          <section>
+            <h1>Webpack: <em>Loader</em> 简介</h1>
+          </section>
+
+          <section>
+            <h2>WHAT</h2>
+            <p>Loaders are <em>transformations</em> that are applied to the source code of a module. They allow you to pre-process files as you <code>import</code> or “load” them. </p>
+          </section>
+
+          <section data-transition="none">
+            <p>  -!../lib/loaders/templateLoader.js?vue-loader-options!../lib/index.js?vue-loader-options!./source.vue?vue&type=template&id=27e4e96e&scoped=true& </p>
+          </section>
+
+          <section data-transition="none">
+            <p><mark class="cyan"> -!</mark>../lib/loaders/templateLoader.js<mark class="yellow">?</mark>vue-loader-options<mark class="green">!</mark>../lib/index.js<mark class="yellow">?</mark>vue-loader-options<mark class="green">!</mark>./source.vue<mark class="yellow">?</mark>vue&type=template&id=27e4e96e&scoped=true& </p>
+          </section>
+
+          <section data-transition="none">
+            <p> -!<mark class="cyan">../lib/loaders/templateLoader.js?vue-loader-options</mark>!<mark class="green">../lib/index.js?vue-loader-options</mark>!<mark class="yellow">./source.vue?vue&type=template&id=27e4e96e&scoped=true&</mark> </p>
+          </section>
+
+          <section>
+            <ul>
+              <li><mark class="cyan"> !</mark> 禁用所有 normal loader</li>
+              <li><mark class="cyan"> !!</mark> 禁用 pre/normal/post 三种 loader</li>
+              <li> <mark class="cyan"> -!</mark> 禁用 pre/loader 而不禁用 postLoader</li>
+            </ul>
+          </section>
+
+          <section>
+            <h1>Webpack Loader: <em>pre/normal/post</em> </h1>
+          </section>
+
+          <section>
+            <h2>Loader 执行顺序</h2>
+            <h3>
+              loader-a,
+              <span class="fragment c" data-fragment-index="2">←</span>
+              loader-b,
+              <span class="fragment c" data-fragment-index="1">←</span>
+              loader-c
+            </h3>
+          </section>
+
+          <section>
+            <h2>Loader 执行顺序</h2>
+            <p>可以理解为 pre/normal/post 把 loader 分成<em>三个桶</em></p>
+            <p class="fragment">看下 DEMO</p>
+          </section>
+
+          <section>
+            <h1>Webpack: <em>Pitch</em> 简介</h1>
+          </section>
+
+          <section>
+            <h2>pitch <code>[pɪtʃ]</code></h2>
+            <p>n. 沥青；音调，音高；</p>
+            <p>v. 沥青；投；野营；</p>
+          </section>
+
+          <section>
+            <h5>一个都看不懂，看下<a href="https://github.com/webpack/webpack/issues/360#issuecomment-156126491">官方解释</a></h5>
+            <img src="img/pitch.jpg" width="1000">
+          </section>
+
+          <section data-markdown>
+            #### 可理解为 loader 前置过程，或者『捕获阶段』
+
+            ```js
+            // normal loader
+            module.exports = function(content) {
+              // 修改文件内容
+              return content;
+            }
+
+            // pitch loader
+            module.exports.pitch = function() {
+              // 数据传递、预处理等
+            }
+            ```
+          </section>
+          
+          <section data-markdown>
+            #### loader 执行
+
+            ```bash
+            loaders: ['loader-a', 'loader-b', 'loader-c']
+
+            |- loader a pitching
+                |- loader b pitching
+                    |- loader c pitching
+                    |- loader c
+                |- loader b
+            |- loader a
+            ```
+          </section>
+
+          <section>
+            <h2>Pitch <span class="c">vs</span> Pre/Normal/Post</h2>
+            <p>还是先分三个桶，然后<em>镜像</em></p>
+            <p class="fragment">看下 DEMO</p>
+          </section>
+
+          <section>
+            <h2>Pitch <strong>返回值</strong></h2>
+            <p>当 Pitch 返回时可以<em>直接阻断</em> Pitch 链条，并代替原有文件返回</p>
+            <p class="fragment">看下 DEMO</p>
+          </section>
+        </section>
+
+        <!-- vue-loader 流程分析 -->
+        <section>
+          <section>
+            <h1><strong>Vue-Loader</strong> 流程分析</h1>
+          </section>
+
+          <section>
+            <!-- <img src="img/vue-loader.jpg" width="1000"> -->
+            <iframe src="https://app.creately.com/diagram/OmcuTe1TGOU/view"
+            width="1000"
+            height="650"
+            frameborder="0"></iframe>
+          </section>
+
+          <section>
+            <h4>第一阶段 <strong>Loader 打散</strong></h4>
+            <img src="img/step1.jpg" width="800">
+          </section>
+
+          <section>
+            <pre class="typescript">
+              <code class="hljs" data-trim data-line-numbers="1,2,4">
+              import { render, staticRenderFns } from "./source.vue?vue&type=template&id=27e4e96e&scoped=true&"
+              import script from "./source.vue?vue&type=script&lang=js&"
+              export * from "./source.vue?vue&type=script&lang=js&"
+              import style0 from "./source.vue?vue&type=style&index=0&id=27e4e96e&scoped=true&lang=css&"
+              
+              
+              /* normalize component */
+              import normalizer from "!../lib/runtime/componentNormalizer.js"
+              var component = normalizer(
+                script,
+                render,
+                staticRenderFns,
+                false,
+                null,
+                "27e4e96e",
+                null
+                
+              )
+              
+              /* hot reload 省略 */
+              component.options.__file = "example/source.vue"
+              export default component.exports
+              </code>
+            </pre>
+          </section>
+
+          <section>
+            <h4>第二阶段 <strong>Pitch 改写</strong></h4>
+            <img src="img/step2.jpg" width="800">
+          </section>
+          
+          <section data-markdown>
+            ```bash
+            "-!../lib/loaders/templateLoader.js??vue-loader-options!../lib/index.js??vue-loader-options!./source.vue?vue&type=template&id=27e4e96e&scoped=true&"
+            "-!../lib/index.js??vue-loader-options!./source.vue?vue&type=script&lang=js&"
+            "-!../node_modules/vue-style-loader/index.js!../node_modules/css-loader/index.js!../lib/loaders/stylePostLoader.js!../lib/index.js??vue-loader-options!./source.vue?vue&type=style&index=0&id=27e4e96e&scoped=true&lang=css&"
+            ```
+          </section>
+
+          <section>
+            <h4>注意 query 里的 id</h4>
+            <p>./source.vue?vue&type=template&<mark class="cyan">id=27e4e96e</mark>&scoped=true</p>
+            <p class="fragment">用来关联样式 scope</p>
+          </section>
+          
+          <section>
+            <h4>第三阶段 <strong>区分注入、编译生成</strong></h4>
+            <img src="img/step3.jpg" width="1000">
+          </section>
+
+          <section>
+            <h4>Template</h4>
+            <p>-!../lib/loaders/<mark class="cyan">templateLoader</mark>.js??vue-loader-options!../lib/index.js??vue-loader-options!./source.vue?vue&type=template&id=27e4e96e&scoped=true&</p>
+          </section>
+
+          <section>
+            <h4>Template</h4>
+            <p>templateLoader → compileTemplate → vue-template-compiler</p>
+          </section>
+
+          <section data-markdown>
+            #### template 代码转换
+
+            ```html
+            &lt;template&gt;
+              &lt;div&gt;
+                &lt;h1&gt;title&lt;/h1&gt;
+                &lt;h1 class=&quot;red&quot;&gt;{{count}}&lt;/h1&gt;
+                &lt;button @click=&quot;e =&gt; count++&quot;&gt;Click Me!&lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/template&gt;
+          </section>
+
+          <section data-markdown>
+            ```js
+            var render = function() {
+              var _vm = this
+              var _h = _vm.$createElement
+              var _c = _vm._self._c || _h
+              return _c("div", [
+                _c("h1", [_vm._v("title")]),
+                _vm._v(" "),
+                _c("h1", { staticClass: "red" }, [_vm._v(_vm._s(_vm.count))]),
+                _vm._v(" "),
+                _c(
+                  "button",
+                  {
+                    on: {
+                      click: function(e) {
+                        return _vm.count++
+                      }
+                    }
+                  },
+                  [_vm._v("Click Me!")]
+                )
+              ])
+            }
+            var staticRenderFns = []
+            render._withStripped = true
+            
+            export { render, staticRenderFns }
+            ```
+          </section>
+
+          <section>
+            <h4>Style</h4>
+            <p>-!../node_modules/<mark class="green">vue-style-loader</mark>/index.js!../node_modules/<mark class="yellow">css-loader</mark>/index.js!../lib/loaders/<mark class="cyan">stylePostLoader</mark>.js!../lib/index.js??vue-loader-options!./source.vue?vue&type=style&index=0&id=27e4e96e&scoped=true&lang=css&</p>
+          </section>
+
+          <section>
+            <ul>
+              <li><mark class="green">vue-style-loader</mark> 解析为 style 标签，额外实现 SSR</li>
+              <li><mark class="yellow">cssLoader</mark> 解析 import</li>
+              <li> <mark class="cyan">stylePostLoader</mark> 注入 scope</li>
+            </ul>
+          </section>
+
+          <section data-markdown>
+            #### style 代码转换
+
+            ```css
+            // before
+            .red {
+              color: red;
+            }
+
+            // after
+            .red[data-v-27e4e96e] {
+              color: red;
+            }
+            ```
+          </section>
+
+          <section>
+            <!-- <img src="img/vue-loader.jpg" width="1000"> -->
+            <iframe src="https://app.creately.com/diagram/OmcuTe1TGOU/view"
+            width="1000"
+            height="650"
+            frameborder="0"></iframe>
+          </section>
+        </section>
+        
+        <section>
+          <section>
+            <h2>Q&amp;A</h2>
+            <p class="fragment">Sorry，是我 Q 你 A</p>
+          </section>
+
+          <section>
+            <ul>
+              <li>loader query</li>
+              <li>pitch? rule.enforce?</li>
+              <li>vue-loader 三个步骤?</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>思考题</h2>
+            <p>Vue-Loader 为何要大费周章的搞成三个文件入口？</p>
+          </section>
+        </section>
+      </div> 
+    </div>
+
+    
+    <script src="//malcolmyu.github.io/reveal.js/js/reveal.js"></script>
+
+    <script>
+
+      // Full list of configuration options available here:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+        transition: Reveal.getQueryHash().transition || "linear", // default/cube/page/concave/zoom/linear/fade/none
+
+        // Parallax scrolling
+        // parallaxBackgroundImage: "https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg",
+        // parallaxBackgroundSize: "2100px 900px",
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: "//malcolmyu.github.io/reveal.js/lib/js/classList.js", condition: function() { return !document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/marked.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/markdown/markdown.js", condition: function() { return !!document.querySelector( "[data-markdown]" ); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; } },
+          { src: "//malcolmyu.github.io/reveal.js/plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; } }
+        ]
+      });
+
+    </script>
+  </body>
+</html>
